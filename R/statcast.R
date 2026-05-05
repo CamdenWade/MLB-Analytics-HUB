@@ -133,8 +133,7 @@ plot_launch_profile <- function(statcast_data, selected_player) {
     )
   }
   
-  player_data |>
-    ggplot(aes(x = launch_angle, y = launch_speed)) +
+  ggplot(player_data, aes(x = launch_angle, y = launch_speed)) +
     geom_rect(
       aes(xmin = 8, xmax = 32, ymin = 95, ymax = Inf),
       fill = "#174A8B",
@@ -142,18 +141,17 @@ plot_launch_profile <- function(statcast_data, selected_player) {
       inherit.aes = FALSE
     ) +
     geom_point(alpha = 0.75, size = 3, color = "#174A8B") +
-    geom_hline(yintercept = 95, linetype = "dashed") +
-    geom_vline(xintercept = c(8, 32), linetype = "dashed") +
+    geom_hline(yintercept = 95, linetype = "dashed", color = "gray40") +
+    geom_vline(xintercept = c(8, 32), linetype = "dashed", color = "gray40") +
     labs(
-      title = paste("Launch Profile:", selected_player),
-      subtitle = "Shaded zone approximates hard-hit ideal launch-angle contact",
       x = "Launch Angle",
       y = "Exit Velocity"
     ) +
     theme_minimal(base_size = 14) +
     theme(
-      plot.title = element_text(size = 18, face = "bold"),
-      plot.subtitle = element_text(size = 12),
-      plot.margin = margin(20, 40, 20, 20)
+      axis.title = element_text(face = "bold"),
+      axis.text = element_text(size = 11),
+      panel.grid.minor = element_blank(),
+      plot.margin = margin(30, 30, 30, 30)
     )
 }

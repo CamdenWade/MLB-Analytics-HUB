@@ -190,10 +190,42 @@ ui <- page_navbar(
           selected = if (length(statcast_player_choices) > 0) statcast_player_choices[1] else NULL
         )
       ),
-      card(card_header("Exit Velocity Leaders"), plotOutput("exit_velocity_plot", height = "600px")),
-      card(card_header("Barrel-Like Contact Leaders"), plotOutput("barrel_like_plot", height = "600px")),
-      card(card_header("Selected Player Launch Profile"), plotOutput("launch_profile_plot", height = "600px")),
-      card(card_header("Statcast Summary"), DTOutput("statcast_table"))
+      
+      uiOutput("statcast_player_header"),
+      
+      div(
+        class = "kpi-wrapper",
+        layout_column_wrap(
+          width = 1 / 5,
+          uiOutput("statcast_kpi_1"),
+          uiOutput("statcast_kpi_2"),
+          uiOutput("statcast_kpi_3"),
+          uiOutput("statcast_kpi_4"),
+          uiOutput("statcast_kpi_5")
+        )
+      ),
+      
+      card(
+        card_header("Selected Player Batted-Ball Events"),
+        DTOutput("selected_statcast_events_table")
+      ),
+      
+      layout_column_wrap(
+        width = 1 / 2,
+        card(
+          card_header("Exit Velocity Leaderboard"),
+          DTOutput("exit_velocity_table")
+        ),
+        card(
+          card_header("Barrel-Like Contact Leaderboard"),
+          DTOutput("barrel_like_table")
+        )
+      ),
+      
+      card(
+        card_header("Full Statcast Summary"),
+        DTOutput("statcast_table")
+      )
     )
   ),
   
@@ -279,6 +311,14 @@ server <- function(input, output, session) {
     } else {
       pitchers |> filter(player_name == input$scout_player) |> slice(1)
     }
+  })
+  
+  selected_statcast_player <- reactive({
+    req(input$statcast_player)
+    
+    statcast_summary |>
+      filter(player_name == input$statcast_player) |>
+      slice(1)
   })
   
   output$hitter_table <- renderDT({
@@ -578,17 +618,86 @@ server <- function(input, output, session) {
     plot_team_pitchers(pitchers, input$team_dashboard_team)
   })
   
-  output$exit_velocity_plot <- renderPlot({
-    plot_exit_velocity_leaders(statcast_summary)
+  output$statcast_player_header <- renderUI({
+    player <- selected_statcast_player()
+    
+    div(
+      class = "player-summary-card",
+      style = "border-left: 8px solid #174A8B;",
+      div(class = "player-name-title", player$player_name[1]),
+      div(class = "player-meta", "Statcast Batted-Ball Profile")
+    )
   })
   
-  output$barrel_like_plot <- renderPlot({
-    plot_barrel_like_leaders(statcast_summary)
+  output$statcast_kpi_1 <- renderUI({
+    player <- selected_statcast_player()
+    make_player_kpi_card(player$batted_balls[1], "Batted Balls")
   })
   
-  output$launch_profile_plot <- renderPlot({
+  output$statcast_kpi_2 <- renderUI({
+    player <- selected_statcast_player()
+    make_player_kpi_card(player$avg_exit_velocity[1], "Avg EV")
+  })
+  
+  output$statcast_kpi_3 <- renderUI({
+    player <- selected_statcast_player()
+    make_player_kpi_card(player$max_exit_velocity[1], "Max EV")
+  })
+  
+  output$statcast_kpi_4 <- renderUI({
+    player <- selected_statcast_player()
+    make_player_kpi_card(paste0(player$hard_hit_rate[1], "%"), "Hard-Hit Rate")
+  })
+  
+  output$statcast_kpi_5 <- renderUI({
+    player <- selected_statcast_player()
+    make_player_kpi_card(paste0(player$barrel_like_rate[1], "%"), "Barrel-Like Rate")
+  })
+  
+  output$selected_statcast_events_table <- renderDT({
     req(input$statcast_player)
-    plot_launch_profile(statcast_data, input$statcast_player)
+    
+    statcast_data |>
+      filter(player_name == input$statcast_player) |>
+      select(
+        `Game Date` = game_date,
+        Event = events,
+        Description = description,
+        `Exit Velocity` = launch_speed,
+        `Launch Angle` = launch_angle,
+        Distance = hit_distance_sc,
+        `Batted Ball Type` = bb_type
+      ) |>
+      arrange(desc(`Exit Velocity`)) |>
+      pretty_datatable(page_length = 10, escape = FALSE)
+  })
+  
+  output$exit_velocity_table <- renderDT({
+    statcast_summary |>
+      arrange(desc(avg_exit_velocity)) |>
+      select(
+        Player = player_name,
+        `Batted Balls` = batted_balls,
+        `Avg Exit Velocity` = avg_exit_velocity,
+        `Max Exit Velocity` = max_exit_velocity,
+        `Hard-Hit Rate` = hard_hit_rate
+      ) |>
+      slice_head(n = 15) |>
+      pretty_datatable(page_length = 15, escape = FALSE)
+  })
+  
+  output$barrel_like_table <- renderDT({
+    statcast_summary |>
+      arrange(desc(barrel_like_rate)) |>
+      select(
+        Player = player_name,
+        `Batted Balls` = batted_balls,
+        `Barrel-Like Rate` = barrel_like_rate,
+        `Avg Launch Angle` = avg_launch_angle,
+        `Avg Exit Velocity` = avg_exit_velocity
+      ) |>
+      slice_head(n = 15) |>
+      pretty_datatable(page_length = 15, escape = FALSE)
   })
   
   output$statcast_table <- renderDT({

@@ -12,13 +12,49 @@ team_colors <- c(
 )
 
 get_team_color <- function(team) {
-  color <- team_colors[[as.character(team)]]
+  team_colors <- c(
+    "ARI" = "#A71930",
+    "ATL" = "#CE1141",
+    "BAL" = "#DF4601",
+    "BOS" = "#BD3039",
+    "CHC" = "#0E3386",
+    "CHW" = "#27251F",
+    "CIN" = "#C6011F",
+    "CLE" = "#00385D",
+    "COL" = "#33006F",
+    "DET" = "#0C2340",
+    "HOU" = "#EB6E1F",
+    "KCR" = "#004687",
+    "LAA" = "#BA0021",
+    "LAD" = "#005A9C",
+    "MIA" = "#00A3E0",
+    "MIL" = "#12284B",
+    "MIN" = "#002B5C",
+    "NYM" = "#FF5910",
+    "NYY" = "#003087",
+    "OAK" = "#003831",
+    "ATH" = "#003831",
+    "PHI" = "#E81828",
+    "PIT" = "#FDB827",
+    "SD" = "#2F241D",
+    "SDP" = "#2F241D",
+    "SEA" = "#0C2C56",
+    "SF" = "#FD5A1E",
+    "SFG" = "#FD5A1E",
+    "STL" = "#C41E3A",
+    "TB" = "#092C5C",
+    "TBR" = "#092C5C",
+    "TEX" = "#003278",
+    "TOR" = "#134A8E",
+    "WSH" = "#AB0003",
+    "WSN" = "#AB0003"
+  )
   
-  if (is.null(color)) {
-    "#1f77b4"
-  } else {
-    color
+  if (is.null(team) || is.na(team) || !(team %in% names(team_colors))) {
+    return("#174A8B")
   }
+  
+  unname(team_colors[team])
 }
 
 detect_player_id_col <- function(data) {

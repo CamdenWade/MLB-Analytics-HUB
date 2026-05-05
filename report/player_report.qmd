@@ -3,83 +3,326 @@ title: "MLB Player Scouting Report"
 format:
   html:
     theme: cosmo
-    toc: true
+    toc: false
+    code-fold: false
+    embed-resources: true
+execute:
+  echo: false
+  warning: false
+  message: false
 params:
   player_name: "Aaron Judge"
   player_type: "Hitter"
-  season: 2024
+  season: 2025
   project_dir: "."
 ---
 
 ```{r setup, include=FALSE}
 library(tidyverse)
-library(DT)
 library(gt)
+library(scales)
 
-project_dir <- params$project_dir
-
-source(file.path(project_dir, "R", "scouting.R"))
+project_dir <- normalizePath(params$project_dir)
 
 hitters <- readRDS(file.path(project_dir, "data", "processed", "hitters.rds"))
 pitchers <- readRDS(file.path(project_dir, "data", "processed", "pitchers.rds"))
 
-player_name <- params$player_name
+player_name_param <- params$player_name
 player_type <- params$player_type
-season <- params$season
+
+get_percentile <- function(data, metric, player_value, higher_is_better = TRUE) {
+  vals <- data[[metric]]
+  vals <- vals[!is.na(vals)]
+
+  pct <- mean(vals <= player_value) * 100
+
+  if (!higher_is_better) {
+    pct <- 100 - pct
+  }
+
+  round(pct, 1)
+}
+
+make_hitter_scouting <- function(data, selected_player) {
+  player <- data |> filter(player_name == selected_player) |> slice(1)
+
+  tibble(
+    Metric = c("WAR", "wRC+", "OPS", "OBP", "SLG"),
+    Value = c(player$war, player$w_rc_plus, player$ops, player$obp, player$slg),
+    Percentile = c(
+      get_percentile(data, "war", player$war),
+      get_percentile(data, "w_rc_plus", player$w_rc_plus),
+      get_percentile(data, "ops", player$ops),
+      get_percentile(data, "obp", player$obp),
+      get_percentile(data, "slg", player$slg)
+    )
+  )
+}
+
+make_pitcher_scouting <- function(data, selected_player) {
+  player <- data |> filter(player_name == selected_player) |> slice(1)
+
+  tibble(
+    Metric = c("WAR", "ERA", "FIP", "K/9", "BB/9"),
+    Value = c(player$war, player$era, player$fip, player$k_9, player$bb_9),
+    Percentile = c(
+      get_percentile(data, "war", player$war),
+      get_percentile(data, "era", player$era, higher_is_better = FALSE),
+      get_percentile(data, "fip", player$fip, higher_is_better = FALSE),
+      get_percentile(data, "k_9", player$k_9),
+      get_percentile(data, "bb_9", player$bb_9, higher_is_better = FALSE)
+    )
+  )
+}
+
+if (player_type == "Hitter") {
+  player <- hitters |> filter(player_name == player_name_param) |> slice(1)
+  scouting_df <- make_hitter_scouting(hitters, player_name_param)
+} else {
+  player <- pitchers |> filter(player_name == player_name_param) |> slice(1)
+  scouting_df <- make_pitcher_scouting(pitchers, player_name_param)
+}
+
+top_metric <- scouting_df |> arrange(desc(Percentile)) |> slice(1)
+low_metric <- scouting_df |> arrange(Percentile) |> slice(1)
 ```
 
-# Player Overview
+<style>
+body {
+  background-color: #f7f9fc;
+}
+
+.report-hero {
+  background: linear-gradient(135deg, #0b1f3a, #174a8b);
+  color: white;
+  padding: 32px;
+  border-radius: 18px;
+  margin-bottom: 24px;
+}
+
+.report-title {
+  font-size: 38px;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.report-subtitle {
+  font-size: 18px;
+  opacity: 0.95;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.kpi-card {
+  background: white;
+  border-radius: 14px;
+  padding: 18px;
+  text-align: center;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.kpi-value {
+  font-size: 28px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.kpi-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.section-card {
+  background: white;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.summary-box {
+  background: #eef4ff;
+  border-left: 6px solid #174a8b;
+  padding: 18px;
+  border-radius: 12px;
+  font-size: 17px;
+}
+</style>
+
+<div class="report-hero">
+  <div class="report-title">`r player_name_param` Scouting Report</div>
+  <div class="report-subtitle">`r player_type` profile | Team: `r player$team[1]` | Season: `r params$season`</div>
+</div>
 
 ```{r}
 if (player_type == "Hitter") {
-  player <- hitters |> filter(player_name == params$player_name)
+  kpis <- tibble(
+    Label = c("WAR", "wRC+", "OPS", "HR", "RBI"),
+    Value = c(
+      round(player$war, 1),
+      round(player$w_rc_plus, 0),
+      round(player$ops, 3),
+      round(player$hr, 0),
+      round(player$rbi, 0)
+    )
+  )
 } else {
-  player <- pitchers |> filter(player_name == params$player_name)
+  kpis <- tibble(
+    Label = c("WAR", "ERA", "FIP", "K/9", "BB/9"),
+    Value = c(
+      round(player$war, 1),
+      round(player$era, 2),
+      round(player$fip, 2),
+      round(player$k_9, 2),
+      round(player$bb_9, 2)
+    )
+  )
 }
 
-player |>
+cat('<div class="kpi-grid">')
+for (i in seq_len(nrow(kpis))) {
+  cat(paste0(
+    '<div class="kpi-card">',
+    '<div class="kpi-value">', kpis$Value[i], '</div>',
+    '<div class="kpi-label">', kpis$Label[i], '</div>',
+    '</div>'
+  ))
+}
+cat('</div>')
+```
+
+<div class="section-card">
+
+## Player Overview
+
+```{r}
+overview_table <- player |>
   select(any_of(c(
     "player_name", "team", "pa", "ip", "hr", "rbi", "avg", "obp",
     "slg", "ops", "w_rc_plus", "era", "fip", "whip", "k_9", "bb_9", "war"
-  ))) |>
-  gt()
+  )))
+
+label_cols <- intersect(
+  names(overview_table),
+  c(
+    "player_name", "team", "pa", "ip", "hr", "rbi", "avg", "obp",
+    "slg", "ops", "w_rc_plus", "era", "fip", "whip", "k_9", "bb_9", "war"
+  )
+)
+
+label_names <- c(
+  player_name = "Player",
+  team = "Team",
+  pa = "PA",
+  ip = "IP",
+  hr = "HR",
+  rbi = "RBI",
+  avg = "AVG",
+  obp = "OBP",
+  slg = "SLG",
+  ops = "OPS",
+  w_rc_plus = "wRC+",
+  era = "ERA",
+  fip = "FIP",
+  whip = "WHIP",
+  k_9 = "K/9",
+  bb_9 = "BB/9",
+  war = "WAR"
+)
+
+overview_table |>
+  gt() |>
+  tab_header(
+    title = md("**Player Stat Line**")
+  ) |>
+  cols_label(
+    .list = as.list(label_names[label_cols])
+  ) |>
+  fmt_number(
+    columns = where(is.numeric),
+    decimals = 2
+  ) |>
+  tab_options(
+    table.font.size = px(14),
+    heading.title.font.size = px(18),
+    table.border.top.color = "#174A8B",
+    table.border.bottom.color = "#174A8B"
+  )
 ```
 
-# Percentile Profile
+</div>
+
+<div class="section-card">
+
+## Percentile Profile
 
 ```{r}
-if (player_type == "Hitter") {
-  scouting_df <- make_hitter_scouting(hitters, player_name)
-} else {
-  scouting_df <- make_pitcher_scouting(pitchers, player_name)
-}
-
-scouting_df |> gt()
-
-plot_percentiles(scouting_df, player_name)
+ggplot(
+  scouting_df,
+  aes(x = reorder(Metric, Percentile), y = Percentile)
+) +
+  geom_col(fill = "#174A8B", width = 0.65) +
+  geom_text(
+    aes(label = paste0(Percentile, "%")),
+    hjust = -0.15,
+    fontface = "bold",
+    size = 4
+  ) +
+  coord_flip(clip = "off") +
+  scale_y_continuous(limits = c(0, 110), breaks = seq(0, 100, 25)) +
+  labs(
+    x = NULL,
+    y = "Percentile"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    axis.text.y = element_text(face = "bold"),
+    panel.grid.major.y = element_blank(),
+    plot.margin = margin(10, 40, 10, 10)
+  )
 ```
-
-# Summary
 
 ```{r}
-top_metric <- scouting_df |>
-  arrange(desc(Percentile)) |>
-  slice(1)
-
-low_metric <- scouting_df |>
-  arrange(Percentile) |>
-  slice(1)
-
-cat(paste0(
-  "**", player_name, "** ranked highest in **",
-  top_metric$Metric,
-  "** with a percentile score of **",
-  top_metric$Percentile,
-  "**. Their lowest relative area was **",
-  low_metric$Metric,
-  "** with a percentile score of **",
-  low_metric$Percentile,
-  "**."
-))
+scouting_df |>
+  gt() |>
+  tab_header(
+    title = md("**Scouting Metrics**")
+  ) |>
+  fmt_number(columns = c(Value, Percentile), decimals = 1) |>
+  data_color(
+    columns = Percentile,
+    colors = col_numeric(
+      palette = c("#fee2e2", "#fef3c7", "#dcfce7"),
+      domain = c(0, 100)
+    )
+  ) |>
+  tab_options(
+    table.font.size = px(14),
+    heading.title.font.size = px(18),
+    table.border.top.color = "#174A8B",
+    table.border.bottom.color = "#174A8B"
+  )
 ```
 
+</div>
+
+<div class="section-card">
+
+## Summary
+
+<div class="summary-box">
+<strong>`r player_name_param`</strong> ranked highest in 
+<strong>`r top_metric$Metric`</strong> with a percentile score of 
+<strong>`r top_metric$Percentile`</strong>. The lowest relative area was 
+<strong>`r low_metric$Metric`</strong> with a percentile score of 
+<strong>`r low_metric$Percentile`</strong>.
+</div>
+
+</div>

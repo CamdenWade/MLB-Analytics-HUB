@@ -502,7 +502,10 @@ server <- function(input, output, session) {
   
   output$download_scouting_report <- downloadHandler(
     filename = function() {
-      paste0(gsub(" ", "_", input$scout_player), "_scouting_report.html")
+      paste0(
+        gsub(" ", "_", input$scout_player),
+        "_scouting_report.html"
+      )
     },
     content = function(file) {
       req(input$scout_player, input$scout_type)
@@ -510,20 +513,35 @@ server <- function(input, output, session) {
       temp_dir <- tempdir()
       temp_report <- file.path(temp_dir, "player_report.qmd")
       
-      file.copy(from = "report/player_report.qmd", to = temp_report, overwrite = TRUE)
+      file.copy(
+        from = "report/player_report.qmd",
+        to = temp_report,
+        overwrite = TRUE
+      )
       
       old_wd <- getwd()
       setwd(temp_dir)
       on.exit(setwd(old_wd), add = TRUE)
       
+      output_name <- paste0(
+        gsub(" ", "_", input$scout_player),
+        "_scouting_report.html"
+      )
+      
       quarto::quarto_render(
-        input = temp_report,
-        output_file = file,
+        input = "player_report.qmd",
+        output_file = output_name,
         execute_params = list(
           player_name = input$scout_player,
           player_type = input$scout_type,
           season = 2024
         )
+      )
+      
+      file.copy(
+        from = file.path(temp_dir, output_name),
+        to = file,
+        overwrite = TRUE
       )
     }
   )

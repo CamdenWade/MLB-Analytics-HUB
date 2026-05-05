@@ -8,7 +8,8 @@ packages <- c(
   "scales",
   "janitor",
   "quarto",
-  "gt"
+  "gt",
+  "broom"
 )
 
 install_if_missing <- function(pkg) {

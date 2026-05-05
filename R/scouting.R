@@ -1,31 +1,10 @@
-get_percentile <- function(data, metric, player_value, higher_is_better = TRUE) {
-  vals <- data[[metric]]
-  vals <- vals[!is.na(vals)]
-  
-  pct <- mean(vals <= player_value) * 100
-  
-  if (!higher_is_better) {
-    pct <- 100 - pct
-  }
-  
-  round(pct, 1)
-}
-
-make_hitter_scouting <- function(data, selected_player) {
-  player <- data |>
-    filter(player_name == selected_player)
-  
-  if (nrow(player) == 0) return(NULL)
+make_hitter_profile_data <- function(data, selected_player) {
+  player <- data |> filter(player_name == selected_player)
+  if (nrow(player) == 0) return(tibble())
   
   tibble(
     Metric = c("WAR", "wRC+", "OPS", "OBP", "SLG"),
-    Value = c(
-      player$war,
-      player$w_rc_plus,
-      player$ops,
-      player$obp,
-      player$slg
-    ),
+    Value = c(player$war, player$w_rc_plus, player$ops, player$obp, player$slg),
     Percentile = c(
       get_percentile(data, "war", player$war),
       get_percentile(data, "w_rc_plus", player$w_rc_plus),
@@ -36,21 +15,13 @@ make_hitter_scouting <- function(data, selected_player) {
   )
 }
 
-make_pitcher_scouting <- function(data, selected_player) {
-  player <- data |>
-    filter(player_name == selected_player)
-  
-  if (nrow(player) == 0) return(NULL)
+make_pitcher_profile_data <- function(data, selected_player) {
+  player <- data |> filter(player_name == selected_player)
+  if (nrow(player) == 0) return(tibble())
   
   tibble(
     Metric = c("WAR", "ERA", "FIP", "K/9", "BB/9"),
-    Value = c(
-      player$war,
-      player$era,
-      player$fip,
-      player$k_9,
-      player$bb_9
-    ),
+    Value = c(player$war, player$era, player$fip, player$k_9, player$bb_9),
     Percentile = c(
       get_percentile(data, "war", player$war),
       get_percentile(data, "era", player$era, higher_is_better = FALSE),
@@ -61,25 +32,86 @@ make_pitcher_scouting <- function(data, selected_player) {
   )
 }
 
-plot_percentiles <- function(scouting_df, selected_player, team_color = "#1f77b4") {
-  scouting_df <- scouting_df |>
-    mutate(label = paste0(Percentile, "%"))
+plot_hitter_profile <- function(data, selected_player) {
+  player <- data |> filter(player_name == selected_player)
+  if (nrow(player) == 0) return(NULL)
   
-  ggplot(scouting_df, aes(x = reorder(Metric, Percentile), y = Percentile)) +
-    geom_col(fill = team_color) +
+  player_team <- player$team[1]
+  bar_color <- get_team_color(player_team)
+  
+  metrics <- make_hitter_profile_data(data, selected_player) |>
+    mutate(
+      label = paste0(Percentile, "%"),
+      Metric = forcats::fct_reorder(Metric, Percentile)
+    )
+  
+  ggplot(metrics, aes(x = Metric, y = Percentile)) +
+    geom_col(fill = bar_color, width = 0.65) +
     geom_text(
       aes(label = label),
-      hjust = 1.15,
-      color = "white",
+      hjust = -0.15,
+      color = "#1f2937",
       fontface = "bold",
       size = 4
     ) +
-    coord_flip() +
-    scale_y_continuous(limits = c(0, 100)) +
+    coord_flip(clip = "off") +
+    scale_y_continuous(
+      limits = c(0, 110),
+      breaks = seq(0, 100, 25)
+    ) +
     labs(
-      title = paste("Percentile Profile:", selected_player),
+      title = paste("Hitter Percentile Profile:", selected_player),
+      subtitle = paste("Team:", player_team),
       x = NULL,
       y = "Percentile"
     ) +
-    theme_minimal()
+    theme_minimal(base_size = 13) +
+    theme(
+      plot.title = element_text(face = "bold", size = 18),
+      plot.subtitle = element_text(size = 12),
+      axis.text.y = element_text(face = "bold"),
+      panel.grid.major.y = element_blank()
+    )
+}
+
+plot_pitcher_profile <- function(data, selected_player) {
+  player <- data |> filter(player_name == selected_player)
+  if (nrow(player) == 0) return(NULL)
+  
+  player_team <- player$team[1]
+  bar_color <- get_team_color(player_team)
+  
+  metrics <- make_pitcher_profile_data(data, selected_player) |>
+    mutate(
+      label = paste0(Percentile, "%"),
+      Metric = forcats::fct_reorder(Metric, Percentile)
+    )
+  
+  ggplot(metrics, aes(x = Metric, y = Percentile)) +
+    geom_col(fill = bar_color, width = 0.65) +
+    geom_text(
+      aes(label = label),
+      hjust = -0.15,
+      color = "#1f2937",
+      fontface = "bold",
+      size = 4
+    ) +
+    coord_flip(clip = "off") +
+    scale_y_continuous(
+      limits = c(0, 110),
+      breaks = seq(0, 100, 25)
+    ) +
+    labs(
+      title = paste("Pitcher Percentile Profile:", selected_player),
+      subtitle = paste("Team:", player_team),
+      x = NULL,
+      y = "Percentile"
+    ) +
+    theme_minimal(base_size = 13) +
+    theme(
+      plot.title = element_text(face = "bold", size = 18),
+      plot.subtitle = element_text(size = 12),
+      axis.text.y = element_text(face = "bold"),
+      panel.grid.major.y = element_blank()
+    )
 }

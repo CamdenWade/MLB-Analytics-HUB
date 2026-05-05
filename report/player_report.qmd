@@ -1,0 +1,82 @@
+---
+title: "MLB Player Scouting Report"
+format:
+  html:
+    theme: cosmo
+    toc: true
+params:
+  player_name: "Aaron Judge"
+  player_type: "Hitter"
+  season: 2025
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(DT)
+library(gt)
+
+source("../R/scouting.R")
+
+hitters <- readRDS("../data/processed/hitters.rds")
+pitchers <- readRDS("../data/processed/pitchers.rds")
+
+player_name <- params$player_name
+player_type <- params$player_type
+season <- params$season
+```
+
+# Player Overview
+
+```{r}
+if (player_type == "Hitter") {
+  player <- hitters |> filter(player_name == params$player_name)
+} else {
+  player <- pitchers |> filter(player_name == params$player_name)
+}
+
+player |>
+  select(any_of(c(
+    "player_name", "team", "pa", "ip", "hr", "rbi", "avg", "obp",
+    "slg", "ops", "w_rc_plus", "era", "fip", "whip", "k_9", "bb_9", "war"
+  ))) |>
+  gt()
+```
+
+# Percentile Profile
+
+```{r}
+if (player_type == "Hitter") {
+  scouting_df <- make_hitter_scouting(hitters, player_name)
+} else {
+  scouting_df <- make_pitcher_scouting(pitchers, player_name)
+}
+
+scouting_df |> gt()
+
+plot_percentiles(scouting_df, player_name)
+```
+
+# Summary
+
+```{r}
+top_metric <- scouting_df |>
+  arrange(desc(Percentile)) |>
+  slice(1)
+
+low_metric <- scouting_df |>
+  arrange(Percentile) |>
+  slice(1)
+
+cat(paste0(
+  "**", player_name, "** ranked highest in **",
+  top_metric$Metric,
+  "** with a percentile score of **",
+  top_metric$Percentile,
+  "**. Their lowest relative area was **",
+  low_metric$Metric,
+  "** with a percentile score of **",
+  low_metric$Percentile,
+  "**."
+))
+```
+

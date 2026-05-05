@@ -7,7 +7,8 @@ format:
 params:
   player_name: "Aaron Judge"
   player_type: "Hitter"
-  season: 2025
+  season: 2024
+  project_dir: "."
 ---
 
 ```{r setup, include=FALSE}
@@ -15,10 +16,12 @@ library(tidyverse)
 library(DT)
 library(gt)
 
-source("../R/scouting.R")
+project_dir <- params$project_dir
 
-hitters <- readRDS("../data/processed/hitters.rds")
-pitchers <- readRDS("../data/processed/pitchers.rds")
+source(file.path(project_dir, "R", "scouting.R"))
+
+hitters <- readRDS(file.path(project_dir, "data", "processed", "hitters.rds"))
+pitchers <- readRDS(file.path(project_dir, "data", "processed", "pitchers.rds"))
 
 player_name <- params$player_name
 player_type <- params$player_type

@@ -510,11 +510,13 @@ server <- function(input, output, session) {
     content = function(file) {
       req(input$scout_player, input$scout_type)
       
+      project_dir <- normalizePath(getwd())
+      
       temp_dir <- tempdir()
       temp_report <- file.path(temp_dir, "player_report.qmd")
       
       file.copy(
-        from = "report/player_report.qmd",
+        from = file.path(project_dir, "report", "player_report.qmd"),
         to = temp_report,
         overwrite = TRUE
       )
@@ -534,7 +536,8 @@ server <- function(input, output, session) {
         execute_params = list(
           player_name = input$scout_player,
           player_type = input$scout_type,
-          season = 2024
+          season = 2024,
+          project_dir = project_dir
         )
       )
       

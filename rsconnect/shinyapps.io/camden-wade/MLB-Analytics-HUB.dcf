@@ -1,12 +1,12 @@
 name: MLB-Analytics-HUB
 title: MLB-Analytics-HUB
-username: camdenwade
-account: camdenwade
+username: camden-wade
+account: camden-wade
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
-appId: 17302944
-bundleId: 11953773
-url: https://camdenwade.shinyapps.io/MLB-Analytics-HUB/
+appId: 17303085
+bundleId: 11953809
+url: https://camden-wade.shinyapps.io/MLB-Analytics-HUB/
 version: 1
 asMultiple: FALSE
 asStatic: FALSE

@@ -1,79 +1,55 @@
 # MLB Analytics Hub
 
-An interactive **baseball analytics dashboard** built with **R Shiny** that allows users to explore player performance, generate scouting reports, and analyze Statcast data.
+An interactive **Baseball Analytics Dashboard** built with **R Shiny** that allows users to explore player performance, advanced metrics, and scouting insights across Major League Baseball.
+
+**Live App:** https://camden-wade.shinyapps.io/MLB-Analytics-HUB/
 
 ---
 
-## Live Demo
+## Overview
 
-https://camden-wade.shinyapps.io/MLB-Analytics-HUB/
+The MLB Analytics Hub is a full-featured analytics platform designed to:
 
----
+- Analyze hitter and pitcher performance  
+- Explore Statcast data and batted ball profiles  
+- Generate automated scouting reports  
+- Understand what drives WAR using modeling techniques  
+- Compare players and evaluate team-level performance  
 
-## Project Overview
-
-The **MLB Analytics Hub** simulates a front-office analytics tool used by baseball teams to evaluate players, compare performance, and generate scouting insights.
-
-This project demonstrates:
-- End-to-end data pipeline (ingestion → cleaning → visualization)
-- Interactive dashboard development with Shiny
-- Sports analytics using real-world baseball data
-- Automated reporting with Quarto
-- Predictive modeling (WAR estimation)
+This project showcases **data engineering, statistical modeling, and interactive visualization** in a production-ready Shiny application.
 
 ---
 
 ## Features
 
-### Player Leaderboards
-- Filter hitters and pitchers by team
-- View advanced metrics like:
-  - WAR
-  - wRC+
-  - OPS
-  - ERA / FIP
-- Includes player headshots
-
----
-
 ### Player Profiles
-- Individual player performance breakdown
-- Clean KPI-style visualization
-- Team-colored bar charts
-
----
+- Key metrics (WAR, wRC+, OPS, etc.)
+- Percentile-based performance visualization
+- Clean UI with team-based styling
 
 ### Scouting Reports
-- Percentile-based player evaluation
-- Key metrics ranked vs league
-- Downloadable polished reports (Quarto)
+- Automatically generated player scouting reports
+- Downloadable reports via Quarto
+- Percentile breakdown across core metrics
 
----
-
-### Player Comparison
-- Side-by-side comparison of two players
-- Visual + tabular analysis
-
----
+### Statcast Dashboard
+- Exit velocity leaders
+- Barrel-like contact rate analysis
+- Launch angle vs exit velocity visualization
 
 ### Team Dashboard
-- Team-level summaries
-- Top hitters and pitchers by WAR
-- Offensive and pitching metrics
-
----
-
-### Statcast Analysis
-- Exit velocity leaders
-- Barrel-like contact rate
-- Launch angle vs exit velocity profile
-
----
+- Team-level WAR summaries
+- Top hitters and pitchers
+- Team leaderboards
 
 ### Modeling Insights
-- Linear regression model predicting WAR
+- Linear regression model explaining WAR
 - Feature importance visualization
-- Identify over/under-performing players
+- Actual vs predicted WAR comparison
+
+### Player Comparison
+- Side-by-side player evaluation
+- Metric comparisons across key stats
 
 ---
 
@@ -82,30 +58,62 @@ This project demonstrates:
 - **R**
 - **Shiny**
 - **ggplot2**
+- **dplyr / tidyr**
 - **plotly**
-- **dplyr / tidyverse**
-- **DT (interactive tables)**
-- **Quarto (report generation)**
-
----
-
-## Data Sources
-
-- [FanGraphs](https://www.fangraphs.com/)
-- [Baseball Savant (Statcast)](https://baseballsavant.mlb.com/)
-
----
-
-## Limitations
-
-- Statcast data is a **sample subset** for performance
-- WAR model is **simplified (linear regression)**
-- Some advanced metrics are not included
-- Player images depend on available IDs
+- **gt**
+- **Quarto**
 
 ---
 
 ## Screenshots
 
-*(Highly recommended — add later)*
+### Home Dashboard
+![Home](screenshots/home.png)
+
+### Batting Leaderboard
+![Batter Leaderboard](screenshots/hitter_leaderboard.png)
+
+### Pitcher Leaderboard
+![Scouting Report](screenshots/pitcher_leaderboard.png)
+
+### Player Profile
+![Player Profile](screenshots/player_profile.png)
+
+### Team Dashboard
+![Team Dashboard](screenshots/team_dashboard.png)
+
+### Modeling Insights
+![Modeling](screenshots/WAR_model.png)
+
+---
+
+## How to Run Locally
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/CamdenWade/MLB-Analytics-HUB.git
+cd MLB-Analytics-HUB
+```
+
+### 2. Install Required Packages
+
+```R
+install.packages(c(
+  "shiny",
+  "tidyverse",
+  "ggplot2",
+  "plotly",
+  "gt",
+  "quarto",
+  "DT"
+))
+```
+### 3. Run the Shiny App
+
+```R
+shiny::runApp()
+```
+
+
 

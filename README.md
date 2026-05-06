@@ -5,7 +5,8 @@ An interactive **baseball analytics dashboard** built with **R Shiny** that allo
 ---
 
 ## Live Demo
-*(Add link here once deployed)*
+
+https://camden-wade.shinyapps.io/MLB-Analytics-HUB/
 
 ---
 

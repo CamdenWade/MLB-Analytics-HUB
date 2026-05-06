@@ -5,7 +5,7 @@ account: camden-wade
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 17303085
-bundleId: 11957617
+bundleId: 11958139
 url: https://camden-wade.shinyapps.io/MLB-Analytics-HUB/
 version: 1
 asMultiple: FALSE

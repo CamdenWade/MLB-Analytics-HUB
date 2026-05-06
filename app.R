@@ -1,8 +1,8 @@
 source("R/00_packages.R")
 source("R/data_prep.R")
 source("R/ui_helpers.R")
-source("R/plots.R")
 source("R/scouting.R")
+source("R/plots.R")
 source("R/comparison.R")
 source("R/team_dashboard.R")
 source("R/statcast.R")
@@ -35,10 +35,7 @@ make_player_kpi_card <- function(value, label) {
 
 ui <- page_navbar(
   title = "MLB Analytics Hub",
-  theme = bs_theme(
-    version = 5,
-    bootswatch = "flatly"
-  ),
+  theme = bs_theme(version = 5, bootswatch = "flatly"),
   header = tags$head(
     tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
   ),
@@ -157,7 +154,7 @@ ui <- page_navbar(
         uiOutput("compare_player_1_selector"),
         uiOutput("compare_player_2_selector")
       ),
-      card(card_header("Comparison Chart"), plotlyOutput("comparison_plot", height = "500px")),
+      card(card_header("Comparison Chart"), plotOutput("comparison_plot", height = "500px")),
       card(card_header("Comparison Table"), DTOutput("comparison_table"))
     )
   ),
@@ -212,14 +209,8 @@ ui <- page_navbar(
       
       layout_column_wrap(
         width = 1 / 2,
-        card(
-          card_header("Exit Velocity Leaderboard"),
-          DTOutput("exit_velocity_table")
-        ),
-        card(
-          card_header("Barrel-Like Contact Leaderboard"),
-          DTOutput("barrel_like_table")
-        )
+        card(card_header("Exit Velocity Leaderboard"), DTOutput("exit_velocity_table")),
+        card(card_header("Barrel-Like Contact Leaderboard"), DTOutput("barrel_like_table"))
       ),
       
       card(
@@ -245,7 +236,7 @@ ui <- page_navbar(
     card(
       card_header("Project Overview"),
       card_body(
-        p("MLB Analytics Hub is an interactive baseball analytics application built with R, Shiny, ggplot2, plotly, DT, Quarto, FanGraphs leaderboards, and Baseball Savant Statcast data."),
+        p("MLB Analytics Hub is an interactive baseball analytics application built with R, Shiny, ggplot2, DT, Quarto, FanGraphs leaderboards, and Baseball Savant Statcast data."),
         p("The goal of this project is to demonstrate sports analytics, data visualization, app development, statistical modeling, and reporting skills in a portfolio-ready format.")
       )
     ),
@@ -325,8 +316,19 @@ server <- function(input, output, session) {
     filtered_hitters() |>
       make_player_display() |>
       select(
-        Player = player_display, Team = team, PA = pa, HR = hr, R = r, RBI = rbi,
-        SB = sb, AVG = avg, OBP = obp, SLG = slg, OPS = ops, `wRC+` = w_rc_plus, WAR = war
+        Player = player_display,
+        Team = team,
+        PA = pa,
+        HR = hr,
+        R = r,
+        RBI = rbi,
+        SB = sb,
+        AVG = avg,
+        OBP = obp,
+        SLG = slg,
+        OPS = ops,
+        `wRC+` = w_rc_plus,
+        WAR = war
       ) |>
       pretty_datatable(page_length = 25, escape = FALSE)
   })
@@ -335,8 +337,18 @@ server <- function(input, output, session) {
     filtered_pitchers() |>
       make_player_display() |>
       select(
-        Player = player_display, Team = team, IP = ip, W = w, L = l, ERA = era,
-        FIP = fip, WHIP = whip, `K/9` = k_9, `BB/9` = bb_9, `HR/9` = hr_9, WAR = war
+        Player = player_display,
+        Team = team,
+        IP = ip,
+        W = w,
+        L = l,
+        ERA = era,
+        FIP = fip,
+        WHIP = whip,
+        `K/9` = k_9,
+        `BB/9` = bb_9,
+        `HR/9` = hr_9,
+        WAR = war
       ) |>
       pretty_datatable(page_length = 25, escape = FALSE)
   })
@@ -492,9 +504,17 @@ server <- function(input, output, session) {
     req(scouting_data())
     
     if (input$scout_type == "Hitter") {
-      team_color <- hitters |> filter(player_name == input$scout_player) |> pull(team) |> first() |> get_team_color()
+      team_color <- hitters |>
+        filter(player_name == input$scout_player) |>
+        pull(team) |>
+        first() |>
+        get_team_color()
     } else {
-      team_color <- pitchers |> filter(player_name == input$scout_player) |> pull(team) |> first() |> get_team_color()
+      team_color <- pitchers |>
+        filter(player_name == input$scout_player) |>
+        pull(team) |>
+        first() |>
+        get_team_color()
     }
     
     plot_percentiles(scouting_data(), input$scout_player, team_color)
@@ -502,16 +522,12 @@ server <- function(input, output, session) {
   
   output$download_scouting_report <- downloadHandler(
     filename = function() {
-      paste0(
-        gsub(" ", "_", input$scout_player),
-        "_scouting_report.html"
-      )
+      paste0(gsub(" ", "_", input$scout_player), "_scouting_report.html")
     },
     content = function(file) {
       req(input$scout_player, input$scout_type)
       
       project_dir <- normalizePath(getwd())
-      
       temp_dir <- tempdir()
       temp_report <- file.path(temp_dir, "player_report.qmd")
       
@@ -559,9 +575,19 @@ server <- function(input, output, session) {
   
   output$compare_player_2_selector <- renderUI({
     if (input$compare_type == "Hitter") {
-      selectInput("compare_player_2", "Player 2", choices = sort(unique(hitters$player_name)), selected = sort(unique(hitters$player_name))[2])
+      selectInput(
+        "compare_player_2",
+        "Player 2",
+        choices = sort(unique(hitters$player_name)),
+        selected = sort(unique(hitters$player_name))[2]
+      )
     } else {
-      selectInput("compare_player_2", "Player 2", choices = sort(unique(pitchers$player_name)), selected = sort(unique(pitchers$player_name))[2])
+      selectInput(
+        "compare_player_2",
+        "Player 2",
+        choices = sort(unique(pitchers$player_name)),
+        selected = sort(unique(pitchers$player_name))[2]
+      )
     }
   })
   
@@ -583,16 +609,14 @@ server <- function(input, output, session) {
       pretty_datatable(page_length = 5, escape = FALSE)
   })
   
-  output$comparison_plot <- renderPlotly({
+  output$comparison_plot <- renderPlot({
     req(input$compare_player_1, input$compare_player_2)
     
     if (input$compare_type == "Hitter") {
-      p <- plot_hitter_comparison(hitters, input$compare_player_1, input$compare_player_2)
+      plot_hitter_comparison(hitters, input$compare_player_1, input$compare_player_2)
     } else {
-      p <- plot_pitcher_comparison(pitchers, input$compare_player_1, input$compare_player_2)
+      plot_pitcher_comparison(pitchers, input$compare_player_1, input$compare_player_2)
     }
-    
-    ggplotly(p) |> config(displayModeBar = FALSE)
   })
   
   output$team_summary_table <- renderDT({
@@ -733,7 +757,11 @@ server <- function(input, output, session) {
   
   output$model_coefficients_table <- renderDT({
     make_model_coefficients(hitter_war_model) |>
-      select(Metric = term, Estimate = estimate, `P-Value` = p.value) |>
+      select(
+        Metric = term,
+        Estimate = estimate,
+        `P-Value` = p.value
+      ) |>
       pretty_datatable(page_length = 10, escape = FALSE)
   })
   

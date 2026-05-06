@@ -12,6 +12,18 @@ packages <- c(
   "broom"
 )
 
+library(shiny)
+library(bslib)
+library(tidyverse)
+library(DT)
+library(plotly)
+library(ggplot2)
+library(gt)
+library(quarto)
+library(broom)
+library(forcats)
+library(scales)
+
 install_if_missing <- function(pkg) {
   if (!requireNamespace(pkg, quietly = TRUE)) {
     install.packages(pkg)
